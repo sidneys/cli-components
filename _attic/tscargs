@@ -1,0 +1,7 @@
+--module commonjs
+--target ES6
+--outDir .
+--declaration
+--sourceMap
+--sourceRoot ./
+src/index.ts

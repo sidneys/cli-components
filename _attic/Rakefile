@@ -1,0 +1,152 @@
+#
+# variables/constants
+# ---------------------------
+
+PWD       = Dir.pwd
+TYPES_DIR = File.join(PWD, 'build')
+TS_COMPILER_FLAGS = ["-t", "ES6", "-d", "--module", "commonjs", "--mapRoot", TYPES_DIR, "--sourceMap"]
+# TYPES_DIR = File.join(PWD, 'type-definitions', 'DefinitelyTyped')
+
+
+#
+# tasks
+# ---------------------------
+
+task :build   => [ './build/index' ]
+task :default => [ :build ]
+task :clean   do |t| remove(Helpers.ppath('build')) end
+
+
+#
+# file/dir rules
+# ---------------------------
+
+file Helpers.ppath('bin', 'index') => Helpers.ppath('build', 'index.bin.js') do |task| makeExecutable(task.prerequisites[0]) end
+
+# copies the given file to bin/, adds a shebang line, and 'chmod +x's it
+def makeExecutable(inFile)
+    outFile = Helpers.ppath('bin', inFile.asType(''))
+
+    sh "echo '#!/usr/bin/env node
+' > #{outFile}"
+    sh "cat #{inFile} >> #{outFile}"
+    sh "chmod +x #{outFile}"
+end
+
+directory   Helpers.ppath('build')
+file        Helpers.ppath('node_modules') do |task| `npm install` end
+file        Helpers.ppath('bin', 'index') => Helpers.ppath('build', 'index.bin.js') do |task| task.prerequisites.each(buildFile) end
+
+rule '.js' => '.bin.ts' do |t|
+    inFile  = t.source
+    outFile = t.name
+    compileCmd = createTypescriptCompileCmd(inFile, outFile)
+    sh "#{compileCmd}"
+
+end
+
+rule '.js' => '.ts' do |t|
+    inFile  = t.source
+    outFile = t.name
+    compileCmd = createTypescriptCompileCmd(inFile, outFile)
+    sh "#{compileCmd}"
+    # `cc -c #{t.source} -o #{t.name}`
+end
+
+
+FileList['./lib/*.ts'].each do |inFile| registerCompileStep(inFile, '.js') end
+
+
+#     outFile = ppath('build', )
+#     file(outFile => inFile)
+#     file(outFile => ppath('build'))
+# end
+
+module Helpers
+
+def registerCompileStep(inFile, newExtension)
+    outFile = ppath('build', inFile.asType(newExtension))
+    file(outFile => inFile)
+    file(outFile => ppath('build'))
+end
+
+def buildFile(inFile)
+    if fileIsType('.ts', inFile)
+        compileTypescript(inFile)
+
+        if fileIsType('.bin.ts')
+            makeExecutable()
+        end
+    end
+end
+
+
+
+def fileIsType(ext, file)
+    # return File.extname(file) == ext
+    return file.ends_with? ext
+end
+
+def withFileExt(file, ext)
+    if ext[0] != "." then ext = ".#{ext}" end
+    return File.basename(filename, File.extname(filename)) + ext
+end
+
+def ppath(filename)
+    return File.expand_path(File.join(PWD, filename))
+end
+
+def ppath(subfolder, filename)
+    # asdf = if subfolder == '.' then File.join(PWD, filename) else File.join(PWD, subfolder, filename) end
+    return File.expand_path(File.join(PWD, subfolder, filename))
+end
+
+def createTypescriptCompileCmd(inFile, outFile)
+    # outDir = File.dirname(outFile)
+    command = ["tsc"] + TS_COMPILER_FLAGS + ["--out", outFile, inFile]
+    return command.join(' ')
+end
+
+def compileTypescript(inFile)
+    # outFile = inFile.asType('.js')
+    compileCmd = createTypescriptCompileCmd(inFile, outDir)
+    sh "#{compileCmd}" #do |ok, res|
+    #     if ok == false
+    #         puts "ok = #{ok}, res = #{res}"
+    #     end
+    # end
+end
+
+def remove(path)
+    if File.exist?(path) then sh "rm -rf #{path}" end
+end
+
+class String
+    def asType(ext)
+        if ext.length > 0 && ext[0] != "." then ext = ".#{ext}" end
+        return File.basename(filename, File.extname(filename)) + ext
+    end
+end
+
+end
+
+
+# task :uninstall do |t| if File.symlink? "/usr/local/bin/nappy" then sh "rm /usr/local/bin/nappy" end end
+# task :clean_modules  do |t| sh "rm -rf ./node_modules" end
+# task :nuke           => [ :clean_modules, :clean ]
+# task :rebuild        => [ :nuke, :build ]
+
+
+# .select {|file| fileIsType('.ts', file) }
+# file './build/index' => ['./build', './lib/index.ts']
+# file './build/index' => './lib/index.ts' do |task|
+#     puts "taks = #{task}"
+#     executableName = File.basename(task.name, '.ts')
+    # compileTypescript(task.name, File.join(PWD, 'build', executableName))
+#     executablePath      = File.join(PWD, 'build', executableName + '.js')
+#     executablePathNoExt = File.join(PWD, 'build', executableName)
+#     mv(executablePath, executablePathNoExt)
+#     `chmod +x #{executablePathNoExt}`
+# end
+
+# ['./lib/index.bin.ts', './lib/cli.ts', './lib/file.ts', './lib/config.ts'].each do |inFile|

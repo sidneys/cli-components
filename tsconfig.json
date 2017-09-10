@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "declaration": true,
+        "sourceMap": true,
+        "outDir": "build"
+    },
+    "files": [
+        "src/index.ts"
+
+      , "src/build-tools.ts"
+      , "src/cache.ts"
+      , "src/color.ts"
+      , "src/config.ts"
+      , "src/dotfile.ts"
+      , "src/file.ts"
+      , "src/io.ts"
+      , "src/misc.ts"
+      , "src/result.ts"
+      , "src/shell.ts"
+      , "src/symbol.ts"
+      , "typings/tsd.d.ts"
+    ]
+}

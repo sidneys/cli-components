@@ -1,0 +1,10 @@
+/// <xreference path='../typings/tsd.d.ts' />
+/// <xreference path='./index.ts' />
+var $c = require('./color');
+exports.arrow = $c.white($c.bold('->'));
+exports.bullet = $c.white('+'); //$c.white($c.bold('[')) + $c.white('+') + $c.white($c.bold(']'))
+exports.into = $c.white($c.bold('---> into'));
+exports.outof = $c.white($c.bold('---> out of'));
+exports.link = $c.white($c.bold(' <--> '));
+exports.prompt = $c.yellow('$');
+//# sourceMappingURL=symbol.js.map
